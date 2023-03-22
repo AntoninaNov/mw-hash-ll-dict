@@ -64,10 +64,29 @@ public class StringsDictionary
     {
             
     }
-
-
+    
     private int CalculateHash(string key)
     {
         // function to convert string value to number 
+    }
+    
+    public void LoadFromFile(string pathToFile)
+    {
+        foreach (var line in File.ReadAllLines(pathToFile))
+        {
+            string[] elements = line.Split("; ");
+            string key = elements[0];
+            string value = String.Join("; ", elements[1..]);
+            Add(key, value);
+        }
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        StringsDictionary dictionary = new StringsDictionary();
+        dictionary.LoadFromFile("dictionary.txt");
     }
 }
