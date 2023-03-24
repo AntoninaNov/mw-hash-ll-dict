@@ -66,7 +66,15 @@ public class StringsDictionary
         
     public void Add(string key, string value)
     {
-            
+        int hash = CalculateHash(key);
+        int index = hash % _buckets.Length;
+
+        if (_buckets[index] == null)
+        {
+            _buckets[index] = new LinkedList();
+        }
+
+        _buckets[index].Add(new KeyValuePair(key, value));    
     }
 
     public void Remove(string key)
@@ -81,7 +89,7 @@ public class StringsDictionary
     
     private int CalculateHash(string key)
     {
-        // function to convert string value to number 
+        return key.GetHashCode();
     }
     
     public void LoadFromFile(string pathToFile)
