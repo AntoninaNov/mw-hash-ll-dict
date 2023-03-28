@@ -58,14 +58,18 @@ public class LinkedList
     }
 }
 
+// Hashtable - an array that's conceptually vertical, but that horizontally is a linked list
 public class StringsDictionary
 {
     private const int InitialSize = 10;
+    private const double LoadFactorThreshold = 0.75;
+    private int _itemsCount = 0;
 
     private LinkedList[] _buckets = new LinkedList[InitialSize];
         
     public void Add(string key, string value)
     {
+        CheckAndResize();
         int hash = CalculateHash(key);
         int index = hash % _buckets.Length;
 
@@ -74,8 +78,10 @@ public class StringsDictionary
             _buckets[index] = new LinkedList();
         }
 
-        _buckets[index].Add(new KeyValuePair(key, value));    
+        _buckets[index].Add(new KeyValuePair(key, value));
+        _itemsCount++;
     }
+
 
     public void Remove(string key)
     {
@@ -89,9 +95,22 @@ public class StringsDictionary
     
     private int CalculateHash(string key)
     {
-        return key.GetHashCode();
+        int currentHashValue = 0;
+        int primeMultiplier = 31; // multiplier is 31 for a better distribution
+
+        foreach (char currentCharacter in key)
+        {
+            int asciiValue = currentCharacter;
+            currentHashValue = currentHashValue * primeMultiplier + asciiValue;
+        }
+        return Math.Abs(currentHashValue);
     }
-    
+
+    private void CheckAndResize()
+    {
+        
+    }
+
     public void LoadFromFile(string pathToFile)
     {
         foreach (var line in File.ReadAllLines(pathToFile))
