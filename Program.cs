@@ -33,6 +33,10 @@ public class LinkedList
     {
         // add provided pair to the end of the linked list
         
+        // Adding the new node at the end of the list (tail)
+        // Adding the new node at a specific position (index) in the list
+        // Update the size of the linked list by incrementing the length counter
+        
         var newNode = new LinkedListNode(pair);
         
         if (_first == null)
@@ -50,6 +54,11 @@ public class LinkedList
     public void RemoveByKey(string key)
     {
         // remove pair with provided key
+    }
+
+    public KeyValuePair GetFirstNode(string key)
+    {
+        
     }
 
     public KeyValuePair GetItemWithKey(string key)
@@ -90,7 +99,14 @@ public class StringsDictionary
 
     public string Get(string key)
     {
-            
+        int hash = CalculateHash(key);
+        int index = hash % _buckets.Length;
+
+        if (_buckets[index] == null)
+            return null;
+
+        KeyValuePair pair = _buckets[index].GetItemWithKey(key);
+        return pair?.Value;
     }
     
     private int CalculateHash(string key)
@@ -106,9 +122,44 @@ public class StringsDictionary
         return Math.Abs(currentHashValue);
     }
 
-    private void CheckAndResize()
+    // initial size
+    // to use enumerator
+
+    private void CollisionsSolver()
     {
         
+    }
+    
+    private void CheckAndResize()
+    {
+        double loadFactor = (double)_itemsCount / _buckets.Length;
+
+        if (loadFactor < LoadFactorThreshold)
+            return;
+
+        int newSize = _buckets.Length * 2;
+        LinkedList[] newBuckets = new LinkedList[newSize];
+
+        for (int i = 0; i < _buckets.Length; i++)
+        {
+            LinkedList currentList = _buckets[i];
+            if (currentList == null)
+                continue;
+
+            LinkedListNode currentNode = currentList.GetFirstNode(); // node[0]
+            while (currentNode != null)
+            {
+                int newHash = CalculateHash(currentNode.Pair.Key);
+                int newIndex = newHash % newSize;
+
+                if (newBuckets[newIndex] == null)
+                    newBuckets[newIndex] = new LinkedList();
+
+                newBuckets[newIndex].Add(currentNode.Pair);
+                currentNode = currentNode.Next;
+            }
+        }
+        _buckets = newBuckets;
     }
 
     public void LoadFromFile(string pathToFile)
