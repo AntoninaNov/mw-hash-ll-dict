@@ -31,12 +31,7 @@ public class LinkedList
     
     public void Add(KeyValuePair pair)
     {
-        // add provided pair to the end of the linked list
-        
-        // Adding the new node at the end of the list (tail)
-        // Adding the new node at a specific position (index) in the list
-        // Update the size of the linked list by incrementing the length counter
-        
+
         var newNode = new LinkedListNode(pair);
         
         if (_first == null)
@@ -53,18 +48,39 @@ public class LinkedList
 
     public void RemoveByKey(string key)
     {
-        // remove pair with provided key
+        if (_first == null) return;
+
+        if (_first.Pair.Key == key)
+        {
+            _first = _first.Next;
+            if (_first == null)
+                _last = null;
+            return;
+        }
+
+        LinkedListNode current = _first;
+        while (current.Next != null)
+        {
+            if (current.Next.Pair.Key == key)
+            {
+                current.Next = current.Next.Next;
+                if (current.Next == null)
+                    _last = current;
+                return;
+            }
+            current = current.Next;
+        }
     }
 
-    public KeyValuePair GetFirstNode(string key)
-    {
+    //public KeyValuePair GetFirstNode(string key)
+    //{
         
-    }
+    //}
 
-    public KeyValuePair GetItemWithKey(string key)
-    {
+    //public KeyValuePair GetItemWithKey(string key)
+    //{
         // get pair with provided key, return null if not found
-    }
+    //}
 }
 
 // Hashtable - an array that's conceptually vertical, but that horizontally is a linked list
@@ -92,10 +108,10 @@ public class StringsDictionary
     }
 
 
-    public void Remove(string key)
-    {
-            
-    }
+    //public void Remove(string key)
+    //{
+    //        
+    //}
 
     public string Get(string key)
     {
@@ -125,10 +141,10 @@ public class StringsDictionary
     // initial size
     // to use enumerator
 
-    private void CollisionsSolver()
-    {
-        
-    }
+    //private void CollisionsSolver()
+    //{
+    //
+    //}
     
     private void CheckAndResize()
     {
