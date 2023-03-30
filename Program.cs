@@ -205,6 +205,28 @@ class Program
     {
         StringsDictionary dictionary = new StringsDictionary();
         dictionary.LoadFromFile("dictionary.txt");
-        
+
+        Console.WriteLine("Enter a word to search or type 'exit' to quit.");
+
+        while (true)
+        {
+            Console.Write("Enter a word: ");
+            string word = Console.ReadLine();
+
+            if (word.ToLower() == "exit")
+            {
+                break;
+            }
+
+            string definition = dictionary.Get(word);
+            if (definition != null)
+            {
+                Console.WriteLine($"Definition for '{word}': {definition}");
+            }
+            else
+            {
+                Console.WriteLine($"The word '{word}' was not found in the dictionary.");
+            }
+        }
     }
 }
