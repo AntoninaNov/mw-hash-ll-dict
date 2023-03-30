@@ -1,4 +1,6 @@
-﻿public class KeyValuePair
+﻿using System;
+using System.IO;
+public class KeyValuePair
 {
     public string Key { get; }
 
@@ -204,28 +206,51 @@ class Program
     static void Main(string[] args)
     {
         StringsDictionary dictionary = new StringsDictionary();
-        dictionary.LoadFromFile("dictionary.txt");
-
-        Console.WriteLine("Enter a word to search or type 'exit' to quit.");
+        dictionary.LoadFromFile("/Users/antoninanovak/RiderProjects/custom-dictionary-mw/dictionary.txt");
 
         while (true)
         {
-            Console.Write("Enter a word: ");
-            string word = Console.ReadLine();
+            Console.Write("Enter a command (search, add, delete, exit): ");
+            string command = Console.ReadLine().ToLower();
 
-            if (word.ToLower() == "exit")
+            if (command == "exit")
             {
                 break;
             }
 
-            string definition = dictionary.Get(word);
-            if (definition != null)
+            if (command == "search")
             {
-                Console.WriteLine($"Definition for '{word}': {definition}");
+                Console.Write("Enter a word: ");
+                string word = Console.ReadLine();
+                string definition = dictionary.Get(word.ToUpper());
+                if (definition != null)
+                {
+                    Console.WriteLine($"Definition for '{word}': {definition}");
+                }
+                else
+                {
+                    Console.WriteLine($"The word '{word}' was not found in the dictionary.");
+                }
+            }
+            else if (command == "add")
+            {
+                Console.Write("Enter a word: ");
+                string word = Console.ReadLine();
+                Console.Write("Enter the definition: ");
+                string definition = Console.ReadLine();
+                dictionary.Add(word.ToUpper(), definition);
+                Console.WriteLine($"The word '{word}' with definition '{definition}' has been added to the dictionary.");
+            }
+            else if (command == "delete")
+            {
+                Console.Write("Enter a word: ");
+                string word = Console.ReadLine();
+                dictionary.Remove(word.ToUpper());
+                Console.WriteLine($"The word '{word}' has been removed from the dictionary.");
             }
             else
             {
-                Console.WriteLine($"The word '{word}' was not found in the dictionary.");
+                Console.WriteLine("Invalid command. Please enter 'search', 'add', 'delete', or 'exit'.");
             }
         }
     }
