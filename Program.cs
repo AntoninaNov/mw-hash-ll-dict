@@ -121,7 +121,16 @@ public class StringsDictionary
 
     public void Remove(string key)
     {
-          
+        int hash = CalculateHash(key);
+        int index = hash % _buckets.Length;
+        // if valid key and if linked list exist, then remove element
+        if (key != null)
+            if (_buckets[index] != null)
+            {
+                _buckets[index].RemoveByKey(key);
+                _itemsCount--;
+            }
+        // if no stop
     }
 
     public string Get(string key)
