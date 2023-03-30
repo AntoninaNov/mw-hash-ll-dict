@@ -72,15 +72,24 @@ public class LinkedList
         }
     }
 
-    //public KeyValuePair GetFirstNode(string key)
-    //{
-        
-    //}
+    public KeyValuePair GetItemWithKey(string key)
+    {
+        LinkedListNode current = _first;
+        while (current != null)
+        {
+            if (current.Pair.Key == key)
+            {
+                return current.Pair;
+            }
+            current = current.Next;
+        }
+        return null;
+    }
 
-    //public KeyValuePair GetItemWithKey(string key)
-    //{
-        // get pair with provided key, return null if not found
-    //}
+    public LinkedListNode GetFirstNode()
+    {
+        return _first;
+    }
 }
 
 // Hashtable - an array that's conceptually vertical, but that horizontally is a linked list
@@ -108,10 +117,10 @@ public class StringsDictionary
     }
 
 
-    //public void Remove(string key)
-    //{
-    //        
-    //}
+    public void Remove(string key)
+    {
+          
+    }
 
     public string Get(string key)
     {
@@ -196,5 +205,6 @@ class Program
     {
         StringsDictionary dictionary = new StringsDictionary();
         dictionary.LoadFromFile("dictionary.txt");
+        
     }
 }
