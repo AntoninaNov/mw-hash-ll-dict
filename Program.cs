@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 public class KeyValuePair
 {
     public string Key { get; }
@@ -31,6 +32,8 @@ public class LinkedList
     private LinkedListNode _first;
     private LinkedListNode _last;
     
+    public int Count { get; private set; }
+    
     public void Add(KeyValuePair pair)
     {
 
@@ -46,6 +49,7 @@ public class LinkedList
             _last.Next = newNode;
             _last = newNode;
         }
+        Count++;
     }
 
     public void RemoveByKey(string key)
@@ -72,6 +76,7 @@ public class LinkedList
             }
             current = current.Next;
         }
+        Count--;
     }
 
     public KeyValuePair GetItemWithKey(string key)
@@ -100,6 +105,7 @@ public class StringsDictionary
     private const int InitialSize = 10;
     private const double LoadFactorThreshold = 0.75;
     private int _itemsCount = 0;
+    private int _nonEmptyBucketsCount = 0;
 
     private LinkedList[] _buckets = new LinkedList[InitialSize];
         
@@ -112,6 +118,7 @@ public class StringsDictionary
         if (_buckets[index] == null)
         {
             _buckets[index] = new LinkedList();
+            _nonEmptyBucketsCount++;
         }
 
         _buckets[index].Add(new KeyValuePair(key, value));
@@ -124,13 +131,18 @@ public class StringsDictionary
         int hash = CalculateHash(key);
         int index = hash % _buckets.Length;
         // if valid key and if linked list exist, then remove element
-        if (key != null)
-            if (_buckets[index] != null)
+        if (key != null && _buckets[index] != null)
+        {
+            int initialCount = _buckets[index].Count;
+            _buckets[index].RemoveByKey(key);
+            if (_buckets[index].Count < initialCount)
             {
-                _buckets[index].RemoveByKey(key);
-                _itemsCount--;
+                if (_buckets[index].Count == 0)
+                {
+                    _nonEmptyBucketsCount--;
+                }
             }
-        // if no stop
+        }
     }
 
     public string Get(string key)
@@ -168,34 +180,73 @@ public class StringsDictionary
     
     private void CheckAndResize()
     {
-        double loadFactor = (double)_itemsCount / _buckets.Length;
+        if (IsResizeNeeded())
+        {
+            ResizeBuckets();
+        }
+    }
 
-        if (loadFactor < LoadFactorThreshold)
-            return;
+    private bool IsResizeNeeded()
+    {
+        double loadFactor = (double)_nonEmptyBucketsCount / _buckets.Length;
+        return loadFactor >= LoadFactorThreshold;
+    }
 
+    private void ResizeBuckets()
+    {
         int newSize = _buckets.Length * 2;
         LinkedList[] newBuckets = new LinkedList[newSize];
 
-        for (int i = 0; i < _buckets.Length; i++)
+        foreach (LinkedList currentList in _buckets)
         {
-            LinkedList currentList = _buckets[i];
             if (currentList == null)
                 continue;
 
-            LinkedListNode currentNode = currentList.GetFirstNode(); // node[0]
+            LinkedListNode currentNode = currentList.GetFirstNode();
             while (currentNode != null)
             {
-                int newHash = CalculateHash(currentNode.Pair.Key);
-                int newIndex = newHash % newSize;
-
-                if (newBuckets[newIndex] == null)
-                    newBuckets[newIndex] = new LinkedList();
-
-                newBuckets[newIndex].Add(currentNode.Pair);
+                KeyValuePair pair = currentNode.Pair;
+                AddPairToNewBuckets(pair, newBuckets);
                 currentNode = currentNode.Next;
             }
         }
         _buckets = newBuckets;
+    }
+
+    private void AddPairToNewBuckets(KeyValuePair pair, LinkedList[] newBuckets)
+    {
+        int newHash = CalculateHash(pair.Key);
+        int newIndex = newHash % newBuckets.Length;
+
+        if (newBuckets[newIndex] == null)
+        {
+            newBuckets[newIndex] = new LinkedList();
+            _nonEmptyBucketsCount++;
+        }
+
+        newBuckets[newIndex].Add(pair);
+    }
+    
+    public void DisplayBucketInfo()
+    {
+        double loadFactor = (double)_nonEmptyBucketsCount / _buckets.Length;
+        Console.WriteLine($"Total buckets: {_buckets.Length}");
+        Console.WriteLine($"Non-empty buckets: {_nonEmptyBucketsCount}");
+        Console.WriteLine($"Load factor: {loadFactor}");
+    }
+    
+    public int NewWordsToReachTargetLoadFactor()
+    {
+        double currentLoadFactor = (double)_nonEmptyBucketsCount / _buckets.Length;
+        double targetLoadFactor = 0.75;
+        if (currentLoadFactor >= targetLoadFactor)
+        {
+            return 0;
+        }
+
+        int requiredNonEmptyBuckets = (int)Math.Ceiling(_buckets.Length * targetLoadFactor);
+        int newWordsNeeded = requiredNonEmptyBuckets - _nonEmptyBucketsCount;
+        return newWordsNeeded;
     }
 
     public void LoadFromFile(string pathToFile)
@@ -214,12 +265,22 @@ class Program
 {
     static void Main(string[] args)
     {
+        static string RandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+        
         StringsDictionary dictionary = new StringsDictionary();
         dictionary.LoadFromFile("/Users/antoninanovak/RiderProjects/custom-dictionary-mw/dictionary.txt");
+        
+        Console.WriteLine("Initial bucket information:");
+        dictionary.DisplayBucketInfo();
 
         while (true)
         {
-            Console.Write("Enter a command (search, add, delete, exit): ");
+            Console.Write("Enter a command (search, add, delete, random, exit): ");
             string command = Console.ReadLine().ToLower();
 
             if (command == "exit")
@@ -249,6 +310,8 @@ class Program
                 string definition = Console.ReadLine();
                 dictionary.Add(word.ToUpper(), definition);
                 Console.WriteLine($"The word '{word}' with definition '{definition}' has been added to the dictionary.");
+                Console.WriteLine("Bucket information after adding a word:");
+                dictionary.DisplayBucketInfo();
             }
             else if (command == "delete")
             {
@@ -256,11 +319,29 @@ class Program
                 string word = Console.ReadLine();
                 dictionary.Remove(word.ToUpper());
                 Console.WriteLine($"The word '{word}' has been removed from the dictionary.");
+                Console.WriteLine("Bucket information after removing a word:");
+                dictionary.DisplayBucketInfo();
+            }
+            else if (command == "random")
+            {
+                Console.WriteLine($"New words needed to reach 75% load factor: {dictionary.NewWordsToReachTargetLoadFactor()}");
+                Console.Write("Enter a number of random words you want to insert: ");
+                int n = int.Parse(Console.ReadLine());
+                for (int i = 0; i < n; i++)
+                {
+                    string randomWord = RandomString(5); // Generate a random word with a length of 5
+                    string randomDefinition = RandomString(10); // Generate a random definition with a length of 10
+                    dictionary.Add(randomWord.ToUpper(), randomDefinition);
+                }
+                Console.WriteLine($"Bucket information after inserting {n} random word(s): ");
+                dictionary.DisplayBucketInfo();
             }
             else
             {
-                Console.WriteLine("Invalid command. Please enter 'search', 'add', 'delete', or 'exit'.");
+                Console.WriteLine("Invalid command. Please enter 'search', 'add', 'delete', 'random', or 'exit'.");
             }
         }
     }
 }
+// KSE
+// 1. the best university; 2. alma mater 
